@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drum Machine - Control de Volumen</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <h1>Drum Machine con Control de Volumen</h1>
+    <p class="subtitle">Ajusta el volumen de cada instrumento y el volumen general</p>
+    
+    <div class="container">
+        <div class="controls">
+            <div class="control-group">
+                <label for="bpm">Tempo (BPM)</label>
+                <input type="range" id="bpm" min="60" max="180" value="120">
+                <span id="bpm-value">120 BPM</span>
+            </div>
+            
+            <div class="control-group">
+                <label for="time-signature">Compás</label>
+                <select id="time-signature">
+                    <option value="4/4">4/4 (16 pasos)</option>
+                    <option value="6/8">6/8 (12 pasos)</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="measures">Compases (1-8)</label>
+                <input type="range" id="measures" min="1" max="8" value="1">
+                <span id="measures-value">1 compás</span>
+            </div>
+            
+            <div class="control-group">
+                <label for="master-volume">Volumen General</label>
+                <input type="range" id="master-volume" min="0" max="100" value="80">
+                <span id="master-volume-value">80%</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Transporte</label>
+                <button id="play-stop" class="play-button">Play</button>
+                <button id="clear">Limpiar</button>
+            </div>
+
+            <div class="control-group">
+                <label>Ritmo</label>
+                <button id="export-button">Exportar Ritmo</button>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
+                <button id="import-button">Importar Ritmo</button>
+            </div>
+        </div>
+        
+        <div class="instrument-controls">
+            <div class="instrument-panel">
+                <div class="instrument-title">Bombo</div>
+                <select id="kick-sound" class="sound-selector">
+                    <option value="0">Bombo 1 (Grave)</option>
+                    <option value="1">Bombo 2 (Medio)</option>
+                    <option value="2">Bombo 3 (Agudo)</option>
+                    <option value="3">Bombo 4 (Electro)</option>
+                    <option value="4">Bombo 5 (Acústico)</option>
+                    <option value="5">Bombo 6 (Pesado)</option>
+                    <option value="6">Bombo 7 (Suave)</option>
+                    <option value="7">Bombo 8 (Distorsionado)</option>
+                    <option value="8">Bombo 9 (Honda)</option>
+                    <option value="9">Bombo 10 (Orquesta)</option>
+                </select>
+                <div class="volume-panel">
+                    <div class="volume-label">Volumen:</div>
+                    <input type="range" id="kick-volume" class="volume-control" min="0" max="100" value="80">
+                    <span id="kick-volume-value" class="volume-value">80%</span>
+                </div>
+            </div>
+            
+            <div class="instrument-panel">
+                <div class="instrument-title">Snare</div>
+                <select id="snare-sound" class="sound-selector">
+                    <option value="0">Snare 1 (Acústico)</option>
+                    <option value="1">Snare 2 (Electro)</option>
+                    <option value="2">Snare 3 (Side Stick)</option>
+                    <option value="3">Snare 4 (Clap)</option>
+                    <option value="4">Snare 5 (Rimshot)</option>
+                    <option value="5">Snare 6 (Orquesta)</option>
+                    <option value="6">Snare 7 (Efecto)</option>
+                    <option value="7">Snare 8 (Caja)</option>
+                    <option value="8">Snare 9 (Piccolo)</option>
+                    <option value="9">Snare 10 (Field)</option>
+                </select>
+                <div class="volume-panel">
+                    <div class="volume-label">Volumen:</div>
+                    <input type="range" id="snare-volume" class="volume-control" min="0" max="100" value="80">
+                    <span id="snare-volume-value" class="volume-value">80%</span>
+                </div>
+            </div>
+            
+            <div class="instrument-panel">
+                <div class="instrument-title">Hi-Hat Cerrado</div>
+                <select id="closedhh-sound" class="sound-selector">
+                    <option value="0">HH 1 (Acústico)</option>
+                    <option value="1">HH 2 (Electro)</option>
+                    <option value="2">HH 3 (Analógico)</option>
+                    <option value="3">HH 4 (Noise)</option>
+                    <option value="4">HH 5 (Clic)</option>
+                    <option value="5">HH 6 (Metálico)</option>
+                    <option value="6">HH 7 (Suave)</option>
+                    <option value="7">HH 8 (Pesado)</option>
+                    <option value="8">HH 9 (Percusivo)</option>
+                    <option value="9">HH 10 (Digital)</option>
+                </select>
+                <div class="volume-panel">
+                    <div class="volume-label">Volumen:</div>
+                    <input type="range" id="closedhh-volume" class="volume-control" min="0" max="100" value="80">
+                    <span id="closedhh-volume-value" class="volume-value">80%</span>
+                </div>
+            </div>
+            
+            <div class="instrument-panel">
+                <div class="instrument-title">Hi-Hat Abierto</div>
+                <select id="openhh-sound" class="sound-selector">
+                    <option value="0">HH Abierto 1</option>
+                    <option value="1">HH Abierto 2</option>
+                    <option value="2">HH Abierto 3</option>
+                    <option value="3">HH Abierto 4</option>
+                    <option value="4">HH Abierto 5</option>
+                    <option value="5">HH Abierto 6</option>
+                    <option value="6">HH Abierto 7</option>
+                    <option value="7">HH Abierto 8</option>
+                    <option value="8">HH Abierto 9</option>
+                    <option value="9">HH Abierto 10</option>
+                </select>
+                <div class="volume-panel">
+                    <div class="volume-label">Volumen:</div>
+                    <input type="range" id="openhh-volume" class="volume-control" min="0" max="100" value="80">
+                    <span id="openhh-volume-value" class="volume-value">80%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="steps-header" id="steps-header"></div>
+        
+        <div class="instruments">
+            <div class="instrument">
+                <div class="instrument-name">Bombo</div>
+                <div class="steps-container" id="kick-steps"></div>
+            </div>
+            
+            <div class="instrument">
+                <div class="instrument-name">Snare</div>
+                <div class="steps-container" id="snare-steps"></div>
+            </div>
+            
+            <div class="instrument">
+                <div class="instrument-name">Hi-Hat Cerrado</div>
+                <div class="steps-container" id="closedhh-steps"></div>
+            </div>
+            
+            <div class="instrument">
+                <div class="instrument-name">Hi-Hat Abierto</div>
+                <div class="steps-container" id="openhh-steps"></div>
+            </div>
+        </div>
+        
+        <div class="current-measure" id="current-measure">Compás actual: 1</div>
+        
+        <div class="visualizer" id="visualizer"></div>
+    </div>
+    
+    <script src="js/script.js"></script>
+</body>
+</html>

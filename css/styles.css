@@ -1,0 +1,313 @@
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #e74c3c;
+            --text: #ecf0f1;
+            --active: #3498db;
+            --playing: #2ecc71;
+            --kick: #8e44ad;
+            --snare: #f39c12;
+            --closedhh: #16a085;
+            --openhh: #2980b9;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .subtitle {
+            color: #bdc3c7;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .container {
+            background: linear-gradient(to bottom, var(--primary), #243342);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            width: 95%;
+            max-width: 1200px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            margin: 5px;
+            min-width: 150px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #ecf0f1;
+        }
+        
+        select, input, button {
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            background-color: var(--secondary);
+            color: var(--text);
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            accent-color: var(--accent);
+        }
+        
+        button {
+            background-color: var(--accent);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .play-button {
+            background-color: var(--playing);
+            font-size: 1.2em;
+            padding: 12px 25px;
+        }
+        
+        .play-button:hover {
+            background-color: #27ae60;
+        }
+        
+        .steps-header,
+        .steps-header-row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        
+        .steps-header {
+            flex-direction: column;
+            margin-left: 160px;
+        }
+        
+        .step-number {
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+            margin: 0 2px;
+            color: #ecf0f1;
+            padding: 5px;
+        }
+        
+        .instrument {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+            background: rgba(52, 73, 94, 0.6);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .steps-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 5px;
+        }
+        
+        .instrument-name {
+            width: 150px;
+            font-weight: bold;
+            text-align: right;
+            padding-right: 15px;
+            color: white;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            margin: 0 2px;
+            background-color: var(--secondary);
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        .step.active {
+            transform: scale(1.1);
+        }
+        
+        .step.kick.active {
+            background-color: var(--kick);
+        }
+        
+        .step.snare.active {
+            background-color: var(--snare);
+        }
+        
+        .step.closedhh.active {
+            background-color: var(--closedhh);
+        }
+        
+        .step.openhh.active {
+            background-color: var(--openhh);
+        }
+        
+        .step.playing {
+            box-shadow: 0 0 15px white;
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .sound-selector {
+            margin-left: 15px;
+            width: 120px;
+        }
+        
+        .volume-control {
+            margin-left: 15px;
+            width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .volume-label {
+            font-size: 0.8em;
+            margin-bottom: 5px;
+            color: #ecf0f1;
+        }
+        
+        .current-measure {
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.2em;
+            color: #ecf0f1;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        
+        .visualizer {
+            height: 80px;
+            width: 100%;
+            background: linear-gradient(to right, #2c3e50, #34495e);
+            border-radius: 5px;
+            margin-top: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .bar {
+            position: absolute;
+            bottom: 0;
+            width: 3px;
+            background-color: var(--playing);
+            margin: 0 1px;
+            display: inline-block;
+            border-radius: 2px 2px 0 0;
+        }
+        
+        .instrument-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .instrument-panel {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .instrument-title {
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .volume-panel {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .steps-header {
+                margin-left: 100px;
+            }
+            
+            .instrument-name {
+                width: 100px;
+            }
+            
+            .step {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .control-group {
+                width: 100%;
+            }
+            
+            .volume-control {
+                width: 80px;
+            }
+        }
