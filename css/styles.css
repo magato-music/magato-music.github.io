@@ -1,14 +1,20 @@
         :root {
-            --primary: #2c3e50;
-            --secondary: #34495e;
-            --accent: #e74c3c;
-            --text: #ecf0f1;
-            --active: #3498db;
-            --playing: #2ecc71;
-            --kick: #8e44ad;
-            --snare: #f39c12;
-            --closedhh: #16a085;
-            --openhh: #2980b9;
+            --bg-primary: #5a6268;
+            --bg-secondary: #6c757d;
+            --bg-tertiary: #7e868d;
+            --accent: #17a2b8;
+            --accent-light: #20c4dc;
+            --text-primary: #f8f9fa;
+            --text-secondary: #e9ecef;
+            --text-muted: #adb5bd;
+            --border: #495057;
+            --kick: #e83e8c;
+            --snare: #20c997;
+            --closedhh: #6f42c1;
+            --openhh: #fd7e14;
+            --metronome: #e74c3c;
+            --playing: #28a745;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
         
         * {
@@ -18,284 +24,593 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: var(--text);
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+            color: var(--text-primary);
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            line-height: 1.5;
         }
         
         h1 {
-            color: var(--accent);
-            margin-bottom: 10px;
+            color: var(--text-primary);
+            margin: 20px 0 5px;
             text-align: center;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-weight: 700;
+            font-size: 2.5rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .subtitle {
-            color: #bdc3c7;
-            margin-bottom: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 25px;
             text-align: center;
+            font-size: 1rem;
+            font-weight: 500;
         }
         
         .container {
-            background: linear-gradient(to bottom, var(--primary), #243342);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow);
             width: 95%;
             max-width: 1200px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
         }
         
-        .controls {
+        .control-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .panel {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 15px;
         }
         
-        .control-group {
+        .control-item {
             display: flex;
             flex-direction: column;
-            margin: 5px;
-            min-width: 150px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 10px;
+        }
+        
+        .control-label {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        select, input {
+            padding: 12px 14px;
             border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow);
         }
         
-        label {
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #ecf0f1;
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.2);
         }
         
-        select, input, button {
-            padding: 8px;
-            border-radius: 5px;
-            border: none;
-            background-color: var(--secondary);
-            color: var(--text);
-            font-weight: bold;
-        }
-        
-        input[type="range"] {
-            accent-color: var(--accent);
-        }
-        
+        /* Estilo unificado para botones */
         button {
-            background-color: var(--accent);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
             cursor: pointer;
-            transition: all 0.3s;
-            font-weight: bold;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            min-width: 120px;
+            height: 48px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         button:hover {
-            background-color: #c0392b;
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
         }
         
-        .play-button {
-            background-color: var(--playing);
-            font-size: 1.2em;
-            padding: 12px 25px;
+        /* Botón Play específico */
+        #play-stop {
+            background: linear-gradient(135deg, var(--playing) 0%, #34ce57 100%);
+            color: white;
         }
         
-        .play-button:hover {
-            background-color: #27ae60;
+        #play-stop:hover {
+            background: linear-gradient(135deg, #2ebf52 0%, #249e40 100%);
         }
         
-        .steps-header,
-        .steps-header-row {
+        /* Botones de acción (Limpiar, Exportar, Importar) */
+        .action-button {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: white;
+        }
+        
+        .action-button:hover {
+            background: linear-gradient(135deg, #0d8ea0 0%, #17a2b8 100%);
+        }
+        
+        .transport-controls {
             display: flex;
+            gap: 10px;
+        }
+        
+        /* Estilos para las perillas */
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .knob {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            position: relative;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+        
+        .knob::before {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 22px;
+            background: var(--accent);
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%) rotate(0deg);
+            transform-origin: bottom center;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .knob-value {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .knob-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
             margin-bottom: 5px;
+            text-align: center;
+        }
+        
+        /* Alineación de números de steps */
+        .steps-header-container {
+            display: flex;
+            margin-bottom: 10px;
+            padding-left: 150px;
+            width: calc(100% - 150px);
         }
         
         .steps-header {
+            display: flex;
             flex-direction: column;
-            margin-left: 160px;
+            width: 100%;
+        }
+        
+        .steps-header-row {
+            display: flex;
+            margin-bottom: 5px;
+            justify-content: flex-start;
+            width: 100%;
         }
         
         .step-number {
             width: 40px;
+            height: 20px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 600;
             margin: 0 2px;
-            color: #ecf0f1;
-            padding: 5px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
         
         .instrument {
             display: flex;
-            margin-bottom: 10px;
-            align-items: center;
-            background: rgba(52, 73, 94, 0.6);
-            padding: 8px;
-            border-radius: 8px;
+            margin-bottom: 8px;
+            align-items: flex-start;
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .instrument:hover {
+            transform: translateY(-1px);
         }
 
         .steps-container {
             display: flex;
             flex-direction: column;
+            width: calc(100% - 150px);
         }
 
         .steps-row {
             display: flex;
-            flex-wrap: wrap;
             margin-bottom: 5px;
+            justify-content: flex-start;
+            width: 100%;
         }
         
         .instrument-name {
             width: 150px;
-            font-weight: bold;
+            font-weight: 600;
             text-align: right;
             padding-right: 15px;
-            color: white;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            padding-top: 10px;
+            flex-shrink: 0;
         }
         
         .step {
             width: 40px;
             height: 40px;
             margin: 0 2px;
-            background-color: var(--secondary);
-            border-radius: 5px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: all 0.2s;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+            transition: all 0.15s;
+            border: 1px solid var(--border);
+            position: relative;
+            flex-shrink: 0;
+            box-shadow: var(--shadow);
+        }
+        
+        .step::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            bottom: 4px;
         }
         
         .step.active {
-            transform: scale(1.1);
+            transform: scale(1.05);
+            border-color: var(--accent);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .step.active::after {
+            background: var(--accent);
         }
         
         .step.kick.active {
             background-color: var(--kick);
+            border-color: var(--kick);
         }
         
         .step.snare.active {
             background-color: var(--snare);
+            border-color: var(--snare);
         }
         
         .step.closedhh.active {
             background-color: var(--closedhh);
+            border-color: var(--closedhh);
         }
         
         .step.openhh.active {
             background-color: var(--openhh);
+            border-color: var(--openhh);
+        }
+        
+        .step.metronome.active {
+            background-color: var(--metronome);
+            border-color: var(--metronome);
         }
         
         .step.playing {
-            box-shadow: 0 0 15px white;
+            box-shadow: 0 0 0 3px var(--playing);
             animation: pulse 0.5s;
         }
         
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+            50% { transform: scale(1.08); }
             100% { transform: scale(1); }
         }
         
         .sound-selector {
+            width: 160px;
             margin-left: 15px;
-            width: 120px;
         }
         
         .volume-control {
             margin-left: 15px;
-            width: 100px;
+            width: 120px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         
         .volume-label {
-            font-size: 0.8em;
+            font-size: 0.8rem;
             margin-bottom: 5px;
-            color: #ecf0f1;
+            color: var(--text-secondary);
         }
         
         .current-measure {
-            font-weight: bold;
+            font-weight: 600;
             text-align: center;
-            margin-top: 15px;
-            font-size: 1.2em;
-            color: #ecf0f1;
-            padding: 10px;
-            background: rgba(0,0,0,0.2);
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            padding: 12px;
+            background: var(--bg-tertiary);
             border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
         }
         
         .visualizer {
-            height: 80px;
+            height: 60px;
             width: 100%;
-            background: linear-gradient(to right, #2c3e50, #34495e);
-            border-radius: 5px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
             margin-top: 20px;
             overflow: hidden;
             position: relative;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
         }
         
         .bar {
             position: absolute;
             bottom: 0;
             width: 3px;
-            background-color: var(--playing);
+            background: linear-gradient(to top, var(--accent), var(--accent-light));
             margin: 0 1px;
             display: inline-block;
             border-radius: 2px 2px 0 0;
+            transition: height 0.1s;
         }
         
+        /* Controles de instrumentos con ancho reducido */
         .instrument-controls {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+            padding-bottom: 10px;
         }
         
         .instrument-panel {
-            flex: 1;
-            min-width: 200px;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--bg-tertiary);
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            min-width: 200px;
+            flex: 1;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+        
+        .instrument-panel:hover {
+            transform: translateY(-2px);
         }
         
         .instrument-title {
-            color: white;
-            margin-bottom: 10px;
+            color: var(--text-primary);
+            margin-bottom: 12px;
             text-align: center;
-            font-weight: bold;
-            padding-bottom: 5px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--accent);
+            font-size: 0.95rem;
         }
         
         .volume-panel {
             display: flex;
             align-items: center;
             margin-top: 10px;
+            gap: 10px;
+        }
+        
+        /* Reorganización del control de reproducción */
+        .playback-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+            height: 200px;
+        }
+        
+        .transport-section {
+            grid-column: 1;
+            grid-row: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+        
+        .metronome-section {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-left: 1px solid var(--border);
+            padding-left: 15px;
+        }
+        
+        .management-section {
+            grid-column: 1;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-start;
+        }
+        
+        .metronome-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .metronome-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+        
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Estilos para perillas en controles de instrumentos */
+        .instrument-knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .instrument-knob {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            position: relative;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+        
+        .instrument-knob::before {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 16px;
+            background: var(--accent);
+            top: 4px;
+            left: 50%;
+            transform: translateX(-50%) rotate(0deg);
+            transform-origin: bottom center;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .instrument-knob-value {
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: center;
+            font-weight: 600;
         }
         
         @media (max-width: 768px) {
-            .controls {
-                flex-direction: column;
-                align-items: center;
+            .control-panels {
+                grid-template-columns: 1fr;
             }
             
-            .steps-header {
-                margin-left: 100px;
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .steps-header-container {
+                padding-left: 120px;
+                width: calc(100% - 120px);
             }
             
             .instrument-name {
-                width: 100px;
+                width: 120px;
+                padding-top: 5px;
+            }
+            
+            .steps-container {
+                width: calc(100% - 120px);
             }
             
             .step {
@@ -303,11 +618,79 @@
                 height: 30px;
             }
             
-            .control-group {
-                width: 100%;
+            .step-number {
+                width: 30px;
+            }
+            
+            .sound-selector {
+                width: 130px;
             }
             
             .volume-control {
-                width: 80px;
+                width: 100px;
+            }
+            
+            .instrument-controls {
+                flex-direction: column;
+            }
+            
+            .instrument-panel {
+                min-width: auto;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .knob {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .instrument-knob {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .playback-controls {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                height: auto;
+                gap: 20px;
+            }
+            
+            .transport-section, .metronome-section, .management-section {
+                grid-column: 1;
+                border-left: none;
+                padding-left: 0;
+            }
+            
+            .transport-section {
+                grid-row: 1;
+            }
+            
+            .metronome-section {
+                grid-row: 2;
+                border-top: 1px solid var(--border);
+                padding-top: 15px;
+            }
+            
+            .management-section {
+                grid-row: 3;
+                border-top: 1px solid var(--border);
+                padding-top: 15px;
+            }
+            
+            /* Ajustes para botones en móviles */
+            button {
+                min-width: 100px;
+                height: 44px;
+                font-size: 0.9rem;
+                padding: 10px 16px;
+            }
+            
+            .transport-controls {
+                flex-direction: column;
+                gap: 8px;
             }
         }

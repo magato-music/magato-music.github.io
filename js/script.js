@@ -6,37 +6,27 @@
             let currentMeasure = 1;
             let intervalId = null;
             let stepsPerMeasure = 16;
+            let beatsPerMeasure = 4; // Compás 4/4 tiene 4 tiempos
             
             // Nodos de ganancia para control de volumen
             let masterGainNode;
-            let kickGainNode, snareGainNode, closedhhGainNode, openhhGainNode;
+            let kickGainNode, snareGainNode, closedhhGainNode, openhhGainNode, metronomeGainNode;
             
             // Elementos DOM
-            const bpmSlider = document.getElementById('bpm');
-            const bpmValue = document.getElementById('bpm-value');
             const timeSignatureSelect = document.getElementById('time-signature');
-            const measuresSlider = document.getElementById('measures');
-            const measuresValue = document.getElementById('measures-value');
             const playStopButton = document.getElementById('play-stop');
             const clearButton = document.getElementById('clear');
             const stepsHeader = document.getElementById('steps-header');
             const currentMeasureDisplay = document.getElementById('current-measure');
             const visualizer = document.getElementById('visualizer');
             
-            const masterVolumeSlider = document.getElementById('master-volume');
-            const masterVolumeValue = document.getElementById('master-volume-value');
             const kickSoundSelect = document.getElementById('kick-sound');
-            const kickVolumeSlider = document.getElementById('kick-volume');
-            const kickVolumeValue = document.getElementById('kick-volume-value');
             const snareSoundSelect = document.getElementById('snare-sound');
-            const snareVolumeSlider = document.getElementById('snare-volume');
-            const snareVolumeValue = document.getElementById('snare-volume-value');
             const closedhhSoundSelect = document.getElementById('closedhh-sound');
-            const closedhhVolumeSlider = document.getElementById('closedhh-volume');
-            const closedhhVolumeValue = document.getElementById('closedhh-volume-value');
             const openhhSoundSelect = document.getElementById('openhh-sound');
-            const openhhVolumeSlider = document.getElementById('openhh-volume');
-            const openhhVolumeValue = document.getElementById('openhh-volume-value');
+            
+            // Controles de metrónomo
+            const metronomeToggle = document.getElementById('metronome-toggle');
             
             const exportButton = document.getElementById('export-button');
             const importButton = document.getElementById('import-button');
@@ -47,8 +37,8 @@
                     steps: document.getElementById('kick-steps'),
                     class: 'kick',
                     volumeNode: null,
-                    volumeSlider: kickVolumeSlider,
-                    volumeValue: kickVolumeValue,
+                    knob: document.getElementById('kick-volume-knob'),
+                    knobValue: document.getElementById('kick-volume-value'),
                     soundSelect: kickSoundSelect,
                     soundFunc: generateKickSound,
                     volumeFunc: updateKickVolume
@@ -57,8 +47,8 @@
                     steps: document.getElementById('snare-steps'),
                     class: 'snare',
                     volumeNode: null,
-                    volumeSlider: snareVolumeSlider,
-                    volumeValue: snareVolumeValue,
+                    knob: document.getElementById('snare-volume-knob'),
+                    knobValue: document.getElementById('snare-volume-value'),
                     soundSelect: snareSoundSelect,
                     soundFunc: generateSnareSound,
                     volumeFunc: updateSnareVolume
@@ -67,8 +57,8 @@
                     steps: document.getElementById('closedhh-steps'),
                     class: 'closedhh',
                     volumeNode: null,
-                    volumeSlider: closedhhVolumeSlider,
-                    volumeValue: closedhhVolumeValue,
+                    knob: document.getElementById('closedhh-volume-knob'),
+                    knobValue: document.getElementById('closedhh-volume-value'),
                     soundSelect: closedhhSoundSelect,
                     soundFunc: generateClosedHHSound,
                     volumeFunc: updateClosedHHVolume
@@ -77,13 +67,164 @@
                     steps: document.getElementById('openhh-steps'),
                     class: 'openhh',
                     volumeNode: null,
-                    volumeSlider: openhhVolumeSlider,
-                    volumeValue: openhhVolumeValue,
+                    knob: document.getElementById('openhh-volume-knob'),
+                    knobValue: document.getElementById('openhh-volume-value'),
                     soundSelect: openhhSoundSelect,
                     soundFunc: generateOpenHHSound,
                     volumeFunc: updateOpenHHVolume
+                },
+                metronome: {
+                    steps: document.getElementById('metronome-steps'),
+                    class: 'metronome',
+                    volumeNode: null,
+                    knob: document.getElementById('metronome-volume-knob'),
+                    knobValue: document.getElementById('metronome-volume-value'),
+                    soundFunc: generateMetronomeSound,
+                    volumeFunc: updateMetronomeVolume
                 }
             };
+            
+            // Clase Knob para manejar las perillas
+            class Knob {
+                constructor(element, onChange) {
+                    this.element = element;
+                    this.onChange = onChange;
+                    this.min = parseInt(element.dataset.min);
+                    this.max = parseInt(element.dataset.max);
+                    this.value = parseInt(element.dataset.value);
+                    this.isDragging = false;
+                    this.startY = 0;
+                    this.startValue = 0;
+                    
+                    this.init();
+                }
+                
+                init() {
+                    this.updateDisplay();
+                    this.setRotation();
+                    
+                    this.element.addEventListener('mousedown', this.startDrag.bind(this));
+                    document.addEventListener('mousemove', this.drag.bind(this));
+                    document.addEventListener('mouseup', this.stopDrag.bind(this));
+                    
+                    // Soporte para pantallas táctiles
+                    this.element.addEventListener('touchstart', this.startDrag.bind(this));
+                    document.addEventListener('touchmove', this.drag.bind(this));
+                    document.addEventListener('touchend', this.stopDrag.bind(this));
+                }
+                
+                startDrag(e) {
+                    this.isDragging = true;
+                    this.startY = e.clientY || e.touches[0].clientY;
+                    this.startValue = this.value;
+                    e.preventDefault();
+                }
+                
+                drag(e) {
+                    if (!this.isDragging) return;
+                    
+                    const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+                    if (!currentY) return;
+                    
+                    const deltaY = this.startY - currentY;
+                    const range = this.max - this.min;
+                    const sensitivity = range / 100; // Ajusta la sensibilidad
+                    
+                    let newValue = this.startValue + (deltaY * sensitivity);
+                    newValue = Math.max(this.min, Math.min(this.max, Math.round(newValue)));
+                    
+                    if (newValue !== this.value) {
+                        this.value = newValue;
+                        this.updateDisplay();
+                        this.setRotation();
+                        if (this.onChange) this.onChange(this.value);
+                    }
+                    
+                    e.preventDefault();
+                }
+                
+                stopDrag() {
+                    this.isDragging = false;
+                }
+                
+                updateDisplay() {
+                    // Actualiza el valor en el elemento de datos
+                    this.element.dataset.value = this.value;
+                    
+                    // Actualiza el texto del valor
+                    const valueElement = this.element.parentElement.querySelector('.knob-value, .instrument-knob-value');
+                    if (valueElement) {
+                        if (this.element.id === 'bpm-knob') {
+                            valueElement.textContent = `${this.value} BPM`;
+                        } else if (this.element.id === 'measures-knob') {
+                            valueElement.textContent = `${this.value} compás${this.value > 1 ? 'es' : ''}`;
+                        } else {
+                            valueElement.textContent = `${this.value}%`;
+                        }
+                    }
+                }
+                
+                setRotation() {
+                    const range = this.max - this.min;
+                    const percentage = (this.value - this.min) / range;
+                    const rotation = percentage * 270 - 135; // -135° a 135°
+                    
+                    // Actualizar la rotación usando transform
+                    this.element.style.setProperty('--rotation', `${rotation}deg`);
+                    
+                    // Actualizar el pseudo-elemento ::before
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        #${this.element.id}::before {
+                            transform: translateX(-50%) rotate(${rotation}deg) !important;
+                        }
+                    `;
+                    
+                    // Eliminar estilos anteriores
+                    const existingStyle = document.getElementById(`style-${this.element.id}`);
+                    if (existingStyle) existingStyle.remove();
+                    
+                    style.id = `style-${this.element.id}`;
+                    document.head.appendChild(style);
+                }
+                
+                setValue(newValue) {
+                    this.value = Math.max(this.min, Math.min(this.max, newValue));
+                    this.updateDisplay();
+                    this.setRotation();
+                }
+            }
+            
+            // Inicializar todas las perillas
+            const bpmKnob = new Knob(document.getElementById('bpm-knob'), function(value) {
+                if (isPlaying) {
+                    stopPlaying();
+                    togglePlaying();
+                }
+            });
+            
+            const measuresKnob = new Knob(document.getElementById('measures-knob'), function(value) {
+                stopPlaying();
+                setupSteps();
+                createVisualizer();
+            });
+            
+            const masterVolumeKnob = new Knob(document.getElementById('master-volume-knob'), function(value) {
+                updateMasterVolume(value);
+            });
+            
+            const metronomeVolumeKnob = new Knob(document.getElementById('metronome-volume-knob'), function(value) {
+                updateMetronomeVolume(value);
+            });
+            
+            // Inicializar perillas de instrumentos
+            Object.values(instruments).forEach(inst => {
+                if (inst.knob) {
+                    new Knob(inst.knob, function(value) {
+                        inst.volumeFunc(value);
+                    });
+                }
+            });
             
             // Funciones de audio
             function initAudioContext() {
@@ -100,11 +241,14 @@
                     closedhhGainNode.connect(masterGainNode);
                     openhhGainNode = audioContext.createGain();
                     openhhGainNode.connect(masterGainNode);
+                    metronomeGainNode = audioContext.createGain();
+                    metronomeGainNode.connect(masterGainNode);
                     
                     instruments.kick.volumeNode = kickGainNode;
                     instruments.snare.volumeNode = snareGainNode;
                     instruments.closedhh.volumeNode = closedhhGainNode;
                     instruments.openhh.volumeNode = openhhGainNode;
+                    instruments.metronome.volumeNode = metronomeGainNode;
                     
                     updateMasterVolume();
                     Object.values(instruments).forEach(inst => inst.volumeFunc());
@@ -113,43 +257,45 @@
                 }
             }
             
-            function updateMasterVolume() {
+            function updateMasterVolume(value = null) {
                 if (masterGainNode) {
-                    const volume = parseInt(masterVolumeSlider.value) / 100;
+                    const volume = (value !== null ? value : parseInt(masterVolumeKnob.value)) / 100;
                     masterGainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-                    masterVolumeValue.textContent = `${masterVolumeSlider.value}%`;
                 }
             }
             
-            function updateKickVolume() {
+            function updateKickVolume(value = null) {
                 if (kickGainNode) {
-                    const volume = parseInt(kickVolumeSlider.value) / 100;
+                    const volume = (value !== null ? value : parseInt(instruments.kick.knob.dataset.value)) / 100;
                     kickGainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-                    kickVolumeValue.textContent = `${kickVolumeSlider.value}%`;
                 }
             }
             
-            function updateSnareVolume() {
+            function updateSnareVolume(value = null) {
                 if (snareGainNode) {
-                    const volume = parseInt(snareVolumeSlider.value) / 100;
+                    const volume = (value !== null ? value : parseInt(instruments.snare.knob.dataset.value)) / 100;
                     snareGainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-                    snareVolumeValue.textContent = `${snareVolumeSlider.value}%`;
                 }
             }
             
-            function updateClosedHHVolume() {
+            function updateClosedHHVolume(value = null) {
                 if (closedhhGainNode) {
-                    const volume = parseInt(closedhhVolumeSlider.value) / 100;
+                    const volume = (value !== null ? value : parseInt(instruments.closedhh.knob.dataset.value)) / 100;
                     closedhhGainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-                    closedhhVolumeValue.textContent = `${closedhhVolumeSlider.value}%`;
                 }
             }
             
-            function updateOpenHHVolume() {
+            function updateOpenHHVolume(value = null) {
                 if (openhhGainNode) {
-                    const volume = parseInt(openhhVolumeSlider.value) / 100;
+                    const volume = (value !== null ? value : parseInt(instruments.openhh.knob.dataset.value)) / 100;
                     openhhGainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-                    openhhVolumeValue.textContent = `${openhhVolumeSlider.value}%`;
+                }
+            }
+            
+            function updateMetronomeVolume(value = null) {
+                if (metronomeGainNode) {
+                    const volume = (value !== null ? value : parseInt(instruments.metronome.knob.dataset.value)) / 100;
+                    metronomeGainNode.gain.setValueAtTime(volume, audioContext.currentTime);
                 }
             }
             
@@ -162,12 +308,6 @@
                     case 1: osc.frequency.setValueAtTime(120, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4); gain.gain.setValueAtTime(0.8, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4); break;
                     case 2: osc.frequency.setValueAtTime(100, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); gain.gain.setValueAtTime(0.7, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); break;
                     case 3: osc.type = 'square'; osc.frequency.setValueAtTime(80, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); gain.gain.setValueAtTime(0.9, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); break;
-                    case 4: osc.frequency.setValueAtTime(130, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.1); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5); gain.gain.setValueAtTime(1, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5); break;
-                    case 5: osc.frequency.setValueAtTime(60, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.6); gain.gain.setValueAtTime(1, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.6); break;
-                    case 6: osc.frequency.setValueAtTime(100, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4); gain.gain.setValueAtTime(0.6, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4); break;
-                    case 7: osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); gain.gain.setValueAtTime(0.8, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); break;
-                    case 8: osc.frequency.setValueAtTime(50, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.7); gain.gain.setValueAtTime(0.9, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.7); break;
-                    case 9: osc.type = 'sine'; osc.frequency.setValueAtTime(110, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5); gain.gain.setValueAtTime(0.7, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5); break;
                 }
                 osc.connect(gain);
                 gain.connect(kickGainNode);
@@ -196,12 +336,6 @@
                     case 1: osc.type = 'square'; osc.frequency.setValueAtTime(150, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); oscGain.gain.setValueAtTime(0.8, audioContext.currentTime); oscGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); noiseGain.gain.setValueAtTime(0.3, audioContext.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); break;
                     case 2: osc.frequency.setValueAtTime(300, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1); oscGain.gain.setValueAtTime(0.6, audioContext.currentTime); oscGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1); noiseGain.gain.value = 0.1; break;
                     case 3: noiseGain.gain.setValueAtTime(0.7, audioContext.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); oscGain.gain.value = 0; break;
-                    case 4: osc.frequency.setValueAtTime(500, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1); oscGain.gain.setValueAtTime(0.8, audioContext.currentTime); oscGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1); noiseGain.gain.value = 0.2; break;
-                    case 5: osc.type = 'sine'; osc.frequency.setValueAtTime(250, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4); oscGain.gain.setValueAtTime(0.6, audioContext.currentTime); oscGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4); noiseGain.gain.value = 0.3; break;
-                    case 6: osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); oscGain.gain.setValueAtTime(0.7, audioContext.currentTime); oscGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); noiseGain.gain.setValueAtTime(0.4, audioContext.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); break;
-                    case 7: osc.frequency.setValueAtTime(200, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); oscGain.gain.setValueAtTime(0.5, audioContext.currentTime); oscGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); noiseGain.gain.setValueAtTime(0.6, audioContext.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); break;
-                    case 8: osc.frequency.setValueAtTime(350, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15); oscGain.gain.setValueAtTime(0.4, audioContext.currentTime); oscGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15); noiseGain.gain.setValueAtTime(0.8, audioContext.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15); break;
-                    case 9: osc.type = 'square'; osc.frequency.setValueAtTime(220, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25); oscGain.gain.setValueAtTime(0.7, audioContext.currentTime); oscGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25); noiseGain.gain.setValueAtTime(0.5, audioContext.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25); break;
                 }
                 noise.connect(noiseFilter);
                 noiseFilter.connect(noiseGain);
@@ -235,12 +369,6 @@
                     case 1: filter.frequency.value = 6000; gain.gain.setValueAtTime(0.4, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08); break;
                     case 2: filter.frequency.value = 9000; gain.gain.setValueAtTime(0.6, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03); break;
                     case 3: filter.frequency.value = 7500; gain.gain.setValueAtTime(0.5, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.06); break;
-                    case 4: filter.frequency.value = 10000; gain.gain.setValueAtTime(0.7, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02); break;
-                    case 5: filter.frequency.value = 8500; gain.gain.setValueAtTime(0.55, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.07); break;
-                    case 6: filter.frequency.value = 5000; gain.gain.setValueAtTime(0.45, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.09); break;
-                    case 7: filter.frequency.value = 9500; gain.gain.setValueAtTime(0.65, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.04); break;
-                    case 8: filter.frequency.value = 7000; gain.gain.setValueAtTime(0.5, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05); break;
-                    case 9: filter.frequency.value = 11000; gain.gain.setValueAtTime(0.7, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.025); break;
                 }
                 
                 noise.loop = true;
@@ -270,20 +398,49 @@
                     case 1: gain.gain.setValueAtTime(0.35, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5); break;
                     case 2: gain.gain.setValueAtTime(0.45, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); break;
                     case 3: gain.gain.setValueAtTime(0.5, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2); break;
-                    case 4: gain.gain.setValueAtTime(0.6, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15); break;
-                    case 5: gain.gain.setValueAtTime(0.4, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.6); break;
-                    case 6: gain.gain.setValueAtTime(0.3, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.7); break;
-                    case 7: gain.gain.setValueAtTime(0.55, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4); break;
-                    case 8: gain.gain.setValueAtTime(0.65, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3); break;
-                    case 9: gain.gain.setValueAtTime(0.7, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25); break;
                 }
                 
                 noise.loop = true;
                 return { play: function() { noise.start(); noise.stop(audioContext.currentTime + 1); } };
             }
             
+            // Función para generar sonido de metrónomo
+            function generateMetronomeSound(beatIndex) {
+                if (!audioContext) return null;
+                
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                // Sonido diferente para el primer tiempo de cada compás
+                if (beatIndex === 0) {
+                    // Sonido más agudo para el primer tiempo (downbeat)
+                    osc.frequency.setValueAtTime(1000, audioContext.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.5, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+                } else {
+                    // Sonido más grave para los demás tiempos
+                    osc.frequency.setValueAtTime(800, audioContext.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+                    gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+                }
+                
+                osc.connect(gain);
+                gain.connect(metronomeGainNode);
+                
+                return { 
+                    play: function() { 
+                        osc.start(); 
+                        osc.stop(audioContext.currentTime + 0.1); 
+                    } 
+                };
+            }
+            
             function playStep() {
-                const totalSteps = stepsPerMeasure * parseInt(measuresSlider.value);
+                const totalSteps = stepsPerMeasure * parseInt(measuresKnob.value);
+                const stepsPerBeat = stepsPerMeasure / beatsPerMeasure;
+                const currentBeat = Math.floor((currentStep % stepsPerMeasure) / stepsPerBeat);
                 
                 Object.values(instruments).forEach(inst => {
                     const steps = inst.steps.querySelectorAll('.step');
@@ -294,11 +451,21 @@
                         steps[currentStep].classList.add('playing');
                     }
                     
+                    // Reproducir sonido si el paso está activo
                     if (steps[currentStep] && steps[currentStep].classList.contains('active')) {
-                        const soundType = parseInt(inst.soundSelect.value);
-                        const sound = inst.soundFunc(soundType);
-                        if (sound) {
-                            sound.play();
+                        // Para el metrónomo, solo reproducimos en los tiempos
+                        if (inst.class === 'metronome' && metronomeToggle.checked) {
+                            // Verificar si estamos en un tiempo
+                            if (currentStep % stepsPerBeat === 0) {
+                                const sound = inst.soundFunc(currentBeat);
+                                if (sound) sound.play();
+                            }
+                        } 
+                        // Para los instrumentos normales
+                        else if (inst.class !== 'metronome') {
+                            const soundType = parseInt(inst.soundSelect.value);
+                            const sound = inst.soundFunc(soundType);
+                            if (sound) sound.play();
                         }
                     }
                 });
@@ -314,7 +481,7 @@
                 
                 currentStep = (currentStep + 1) % totalSteps;
                 currentMeasure = Math.floor(currentStep / stepsPerMeasure) + 1;
-                currentMeasureDisplay.textContent = `Compás actual: ${currentMeasure} / ${measuresSlider.value}`;
+                currentMeasureDisplay.textContent = `Compás actual: ${currentMeasure} / ${measuresKnob.value}`;
             }
             
             function togglePlaying() {
@@ -322,11 +489,11 @@
                 isPlaying = !isPlaying;
                 if (isPlaying) {
                     currentStep = 0;
-                    const bpm = parseInt(bpmSlider.value);
+                    const bpm = parseInt(bpmKnob.value);
                     const interval = 60000 / bpm / (stepsPerMeasure / 4);
                     intervalId = setInterval(playStep, interval);
                     playStopButton.textContent = 'Stop';
-                    playStopButton.style.backgroundColor = 'var(--accent)';
+                    playStopButton.style.backgroundColor = '#ff4d7c';
                     playStep();
                 } else {
                     stopPlaying();
@@ -340,14 +507,15 @@
                 }
                 isPlaying = false;
                 playStopButton.textContent = 'Play';
-                playStopButton.style.backgroundColor = 'var(--playing)';
+                playStopButton.style.backgroundColor = '';
                 document.querySelectorAll('.step.playing').forEach(step => step.classList.remove('playing'));
                 document.querySelectorAll('.bar').forEach(bar => bar.style.height = '10%');
             }
             
             function setupSteps() {
-                const numMeasures = parseInt(measuresSlider.value);
+                const numMeasures = parseInt(measuresKnob.value);
                 const totalSteps = stepsPerMeasure * numMeasures;
+                const stepsPerBeat = stepsPerMeasure / beatsPerMeasure;
                 
                 Object.values(instruments).forEach(inst => {
                     const stepsContainer = inst.steps;
@@ -362,22 +530,31 @@
                             const step = document.createElement('div');
                             step.classList.add('step', inst.class);
                             step.dataset.step = stepIndex;
-                            step.addEventListener('click', () => {
-                                initAudioContext();
-                                step.classList.toggle('active');
-                            });
+                            
+                            // Para el metrónomo, activamos automáticamente los tiempos
+                            if (inst.class === 'metronome') {
+                                if (i % stepsPerBeat === 0) {
+                                    step.classList.add('active');
+                                }
+                                step.style.pointerEvents = 'none'; // No permitir interacción
+                            } else {
+                                step.addEventListener('click', () => {
+                                    initAudioContext();
+                                    step.classList.toggle('active');
+                                });
+                            }
+                            
                             measureRow.appendChild(step);
                         }
                         stepsContainer.appendChild(measureRow);
                     }
                 });
                 
-                setupStepsHeader(totalSteps);
+                setupStepsHeader(totalSteps, numMeasures);
             }
             
-            function setupStepsHeader(totalSteps) {
+            function setupStepsHeader(totalSteps, numMeasures) {
                 stepsHeader.innerHTML = '';
-                const numMeasures = parseInt(measuresSlider.value);
                 
                 for (let m = 0; m < numMeasures; m++) {
                     const headerRow = document.createElement('div');
@@ -394,12 +571,14 @@
             }
             
             function createVisualizer() {
-                const numMeasures = parseInt(measuresSlider.value);
+                const numMeasures = parseInt(measuresKnob.value);
                 const totalSteps = stepsPerMeasure * numMeasures;
                 visualizer.innerHTML = '';
                 for (let i = 0; i < totalSteps; i++) {
                     const bar = document.createElement('div');
                     bar.classList.add('bar');
+                    bar.style.height = '10%';
+                    bar.style.left = `${(i / totalSteps) * 100}%`;
                     visualizer.appendChild(bar);
                 }
             }
@@ -408,9 +587,12 @@
             function saveBeat() {
                 const beatData = {
                     name: "Ritmo de Batería",
-                    bpm: parseInt(bpmSlider.value),
+                    bpm: parseInt(bpmKnob.value),
                     timeSignature: timeSignatureSelect.value,
-                    measures: parseInt(measuresSlider.value),
+                    measures: parseInt(measuresKnob.value),
+                    beatsPerMeasure: beatsPerMeasure,
+                    metronomeEnabled: metronomeToggle.checked,
+                    metronomeVolume: parseInt(instruments.metronome.knob.dataset.value),
                     instruments: {}
                 };
             
@@ -418,8 +600,8 @@
                     const inst = instruments[key];
                     const steps = Array.from(inst.steps.querySelectorAll('.step')).map(step => step.classList.contains('active'));
                     beatData.instruments[key] = {
-                        sound: parseInt(inst.soundSelect.value),
-                        volume: parseInt(inst.volumeSlider.value),
+                        sound: key === 'metronome' ? 0 : parseInt(inst.soundSelect.value),
+                        volume: parseInt(inst.knob.dataset.value),
                         steps: steps
                     };
                 });
@@ -467,14 +649,27 @@
                 stopPlaying();
                 
                 // Actualizar controles principales
-                bpmSlider.value = beatData.bpm;
-                bpmValue.textContent = `${beatData.bpm} BPM`;
+                bpmKnob.setValue(beatData.bpm);
                 timeSignatureSelect.value = beatData.timeSignature;
                 
+                // Actualizar beatsPerMeasure si está en los datos
+                if (beatData.beatsPerMeasure) {
+                    beatsPerMeasure = beatData.beatsPerMeasure;
+                }
+                
+                // Cargar configuración del metrónomo
+                if (beatData.metronomeEnabled !== undefined) {
+                    metronomeToggle.checked = beatData.metronomeEnabled;
+                }
+                if (beatData.metronomeVolume !== undefined) {
+                    instruments.metronome.knob.dataset.value = beatData.metronomeVolume;
+                    instruments.metronome.knobValue.textContent = `${beatData.metronomeVolume}%`;
+                    updateMetronomeVolume(beatData.metronomeVolume);
+                }
+                
                 // Si el número de compases ha cambiado, reconfigurar la interfaz
-                if (parseInt(measuresSlider.value) !== beatData.measures) {
-                    measuresSlider.value = beatData.measures;
-                    measuresValue.textContent = `${beatData.measures} compás${beatData.measures > 1 ? 'es' : ''}`;
+                if (parseInt(measuresKnob.value) !== beatData.measures) {
+                    measuresKnob.setValue(beatData.measures);
                     setupSteps();
                     createVisualizer();
                 }
@@ -483,11 +678,15 @@
                     const inst = instruments[key];
                     const instData = beatData.instruments[key];
                     
-                    inst.soundSelect.value = instData.sound;
-                    inst.volumeSlider.value = instData.volume;
-                    inst.volumeValue.textContent = `${instData.volume}%`;
+                    if (key !== 'metronome') {
+                        inst.soundSelect.value = instData.sound;
+                    }
                     
-                    if (audioContext) {
+                    // Actualizar perilla de volumen
+                    inst.knob.dataset.value = instData.volume;
+                    inst.knobValue.textContent = `${instData.volume}%`;
+                    
+                    if (audioContext && inst.volumeNode) {
                         inst.volumeNode.gain.setValueAtTime(instData.volume / 100, audioContext.currentTime);
                     }
                     
@@ -504,45 +703,37 @@
                 });
             }
             
+            // Actualizar beatsPerMeasure cuando cambie el compás
+            function updateTimeSignature() {
+                stopPlaying();
+                if (timeSignatureSelect.value === '4/4') {
+                    stepsPerMeasure = 16;
+                    beatsPerMeasure = 4; // 4 tiempos por compás
+                } else {
+                    stepsPerMeasure = 12;
+                    beatsPerMeasure = 6; // 6 tiempos por compás en 6/8
+                }
+                setupSteps();
+                createVisualizer();
+            }
+            
             // Listeners de eventos
             playStopButton.addEventListener('click', togglePlaying);
             clearButton.addEventListener('click', () => {
                 stopPlaying();
-                document.querySelectorAll('.step.active').forEach(step => step.classList.remove('active'));
+                document.querySelectorAll('.step.active').forEach(step => {
+                    // No limpiar los pasos del metrónomo
+                    if (!step.classList.contains('metronome')) {
+                        step.classList.remove('active');
+                    }
+                });
             });
-            bpmSlider.addEventListener('input', () => {
-                bpmValue.textContent = `${bpmSlider.value} BPM`;
-                if (isPlaying) {
-                    stopPlaying();
-                    togglePlaying();
-                }
-            });
-            timeSignatureSelect.addEventListener('change', () => {
-                stopPlaying();
-                if (timeSignatureSelect.value === '4/4') {
-                    stepsPerMeasure = 16;
-                } else {
-                    stepsPerMeasure = 12;
-                }
-                setupSteps();
-                createVisualizer();
-            });
-            measuresSlider.addEventListener('input', () => {
-                measuresValue.textContent = `${measuresSlider.value} compás${measuresSlider.value > 1 ? 'es' : ''}`;
-                stopPlaying();
-                setupSteps();
-                createVisualizer();
-            });
-            masterVolumeSlider.addEventListener('input', updateMasterVolume);
-            kickVolumeSlider.addEventListener('input', updateKickVolume);
-            snareVolumeSlider.addEventListener('input', updateSnareVolume);
-            closedhhVolumeSlider.addEventListener('input', updateClosedHHVolume);
-            openhhVolumeSlider.addEventListener('input', updateOpenHHVolume);
+            timeSignatureSelect.addEventListener('change', updateTimeSignature);
             
             exportButton.addEventListener('click', exportBeat);
             importButton.addEventListener('click', () => importFile.click());
             importFile.addEventListener('change', importBeat);
             
-            setupSteps();
-            createVisualizer();
+            // Inicializar la interfaz
+            updateTimeSignature(); // Para establecer los valores iniciales correctos
         });
